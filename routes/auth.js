@@ -3,11 +3,11 @@ const { body } = require("express-validator/check");
 const User = require("../models/user");
 
 const authController = require("../controllers/auth");
+const isAuth = require('../middleware/is-auth')
 
 const router = express.Router();
-router.put(
-  "/signup",
-  [
+router.put("/signup"
+, [
     body("email")
       .isEmail()
       .withMessage("Please Enter a Valid Email")
@@ -25,5 +25,16 @@ router.put(
   authController.signup
 );
 
-router.post('/login',authController.login)
+router.post('/login'
+,authController.login
+);
+
+router.put('/setuserstatus/:userId'
+,isAuth
+,authController.setuserstatus
+);
+
+router.get('/userstatus'
+,isAuth
+, authController.userstatus)
 module.exports = router;
