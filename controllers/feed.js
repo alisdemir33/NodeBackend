@@ -4,31 +4,35 @@ const path = require("path");
 const { validationResult } = require("express-validator/check");
 
 const Post = require("../models/post");
+const User = require("../models/user");
 
 exports.getPosts = (req, res, next) => {
-  const currentPage= req.query.page || 1;
-  const perPage=2;
+  const currentPage = req.query.page || 1;
+  const perPage = 2;
   let totalItems;
-  Post.find().countDocuments()
-  .then(count =>{
-    totalItems=count;
-   return Post.find()
-   .skip((currentPage-1)*perPage)
-   .limit(perPage);
-  })
+  Post.find()
+    .countDocuments()
+    .then((count) => {
+      totalItems = count;
+      return Post.find()
+        .skip((currentPage - 1) * perPage)
+        .limit(perPage);
+    })
     .then((posts) => {
       res
         .status(200)
-        .json({ message: "Fetched posts successfully.", posts: posts,totalItems:totalItems });
-    })  
-  .catch((err) => {
-    if (!err.statusCode) {
-      err.statusCode = 500;
-    }
-    next(err);
-  });
-
- 
+        .json({
+          message: "Fetched posts successfully.",
+          posts: posts,
+          totalItems: totalItems,
+        });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
 };
 
 exports.createPost = (req, res, next) => {
@@ -46,18 +50,28 @@ exports.createPost = (req, res, next) => {
   const imageUrl = req.file.path;
   const title = req.body.title;
   const content = req.body.content;
+  let creator;
   const post = new Post({
     title: title,
     content: content,
     imageUrl: imageUrl,
-    creator: { name: "Maximilian" },
+    creator: req.userId,
   });
-  post
+  return post
     .save()
+    .then((result) => {
+      return User.findById(req.userId);
+    })
+    .then((user) => {
+      creator = user;
+      user.posts.push(post);
+      return user.save();
+    })
     .then((result) => {
       res.status(201).json({
         message: "Post created successfully!",
-        post: result,
+        post: post,
+        creator: { _id: creator._id, name: creator.name },
       });
     })
     .catch((err) => {
@@ -97,7 +111,8 @@ exports.updatePost = (req, res, next) => {
   }
   const title = req.body.title;
   let imageUrl = req.body.image;
-  let content=req.body.content;
+  let content = req.body.content;
+  let creator;
   if (req.file) {
     imageUrl = req.file.path;
   }
@@ -115,18 +130,24 @@ exports.updatePost = (req, res, next) => {
         throw err;
       }
 
-      if(imageUrl !== post.imageUrl){
+      if (post.creator.toString() !== req.userId) {
+        const err = new Error("Not Authorized!");
+        err.statusCode = 403;
+        throw err;
+      }
+
+      if (imageUrl !== post.imageUrl) {
         clearImage(post.imageUrl);
       }
 
-      post.title=title;    
-      post.imageUrl=imageUrl;
-      post.content=content;
-  
-     
-     return post.save();
-    }).then( result =>{
-      res.status(200).json({message:'post updated',post:result})
+      post.title = title;
+      post.imageUrl = imageUrl;
+      post.content = content;
+
+      return post.save();
+    })
+    .then((result) => {
+      res.status(200).json({ message: "post updated", post: result });
     })
     .catch((err) => {
       if (!err.statusCode) {
@@ -181,30 +202,41 @@ exports.updatePost = (req, res, next) => {
     });
 }; */
 
-exports.deletePost = (req, res, next) =>{
-  const postId= req.params.postId;
+exports.deletePost = (req, res, next) => {
+  const postId = req.params.postId;
   Post.findById(postId)
-  .then(post =>{
-    //check user
-    if (!post) {
-      const error = new Error('Could not find post.');
-      error.statusCode = 404;
-      throw error;
-    }
-    clearImage(post.imageUrl);
-    return Post.findByIdAndRemove(postId)   
-  })
-  .then(result =>{
-    console.log(result);
-    res.status(200).json({message:'Post Deleted'});
-  })
-  .catch( err =>{
-    if (!err.statusCode) {
-      err.statusCode = 500;
-    }
-    next(err);
-  })
-}
+    .then((post) => {
+      //check user
+      if (!post) {
+        const error = new Error("Could not find post.");
+        error.statusCode = 404;
+        throw error;
+      }
+      if (post.creator.toString() !== req.userId) {
+        const err = new Error("Not Authorized!");
+        err.statusCode = 403;
+        throw err;
+      }
+      clearImage(post.imageUrl);
+      return Post.findByIdAndRemove(postId);
+    })
+    .then((result) => {
+      return User.findById(req.userId);
+    })
+    .then((user) => {
+      user.posts.pull(postId);
+      return user.save();
+    })
+    .then((result) => {
+      res.status(200).json({ message: "Post Deleted" });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
 
 const clearImage = (filePath) => {
   filePath = path.join(__dirname, "..", filePath);
