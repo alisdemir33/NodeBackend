@@ -14,7 +14,7 @@ exports.getPosts = async (req, res, next) => {
     const count = await Post.find().countDocuments();
 
     totalItems = count;
-    const posts = await Post.find()
+    const posts = await Post.find({creator:req.userId})
       .skip((currentPage - 1) * perPage)
       .limit(perPage);
 
