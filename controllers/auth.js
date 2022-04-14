@@ -49,6 +49,7 @@ exports.signup = (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
+ 
     const email = req.body.email;
     const password = req.body.password;
     const user = await User.findOne({ email: email });
@@ -63,7 +64,7 @@ exports.login = async (req, res, next) => {
 
     if (!isEqual) {
       const error = new Error("Wrong Password");
-      erroe.statusCode = 401;
+      error.statusCode = 401;
       throw error;
     }
     const token = jwt.sign(
