@@ -72,7 +72,7 @@ exports.login = async (req, res, next) => {
       "somespersecretkey",
       { expiresIn: "12h" }
     );
-    res.status(200).json({ token: token, userId: loadedUser._id.toString() });
+    res.status(200).json({ token: token, status:loadedUser.status, userId: loadedUser._id.toString(),rights:loadedUser.rights });
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;

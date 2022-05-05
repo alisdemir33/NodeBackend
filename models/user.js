@@ -17,6 +17,10 @@ const userSchema = new Schema({
     type: String,
     default: "Iam new",
   },
+  rights:[{
+    type:String,
+  }]
+  ,
   posts :[{
       type:Schema.Types.ObjectId,
       ref:'Post'
