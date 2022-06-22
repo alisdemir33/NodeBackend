@@ -14,12 +14,12 @@ router.get('/contacts',isAuth,
 router.post(
   '/contact',isAuth,
   [
-    body('title')
+    body('name')
       .trim()
-      .isLength({ min: 5 }),
-    body('content')
+      .isLength({ min: 2 }),
+    body('surname')
       .trim()
-      .isLength({ min: 5 })
+      .isLength({ min: 2 })
   ],
   contactController.createContact
 );
@@ -30,12 +30,12 @@ contactController.getContact);
 router.put(
   '/contact/:contactId',isAuth,
   [
-    body('title')
+    body('name')
       .trim()
-      .isLength({ min: 5 }),
-    body('content')
+      .isLength({ min: 2 }),
+    body('surname')
       .trim()
-      .isLength({ min: 5 })
+      .isLength({ min: 2 })
   ],
   contactController.updateContact
 );

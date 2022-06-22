@@ -57,7 +57,7 @@ app.use((req, res, next) => {
     'Access-Control-Allow-Methods',
     'OPTIONS, GET, POST, PUT, PATCH, DELETE'
   );
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   next();
 });
 
@@ -76,7 +76,7 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(
     'mongodb+srv://alisdemir:DbR4mD9Cgg7vcdN@cluster0.vyp7i.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
-  )
+    , { useNewUrlParser: true })
   .then(result => {
     app.listen(8080);
   })

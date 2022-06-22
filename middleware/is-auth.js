@@ -4,7 +4,7 @@ module.exports = (req,res,next) =>{
 
     const authHeader =req.get('Authorization');
     if(!authHeader){
-        const error = new Error('Token is invalid')
+        const error = new Error('Token is invalid:Auth Header Not Found')
         error.statusCode=401;
         throw error;
     }
@@ -18,7 +18,7 @@ module.exports = (req,res,next) =>{
        throw error;
     }
     if(!decodedToken){
-        const error = new Error('Token is invalid')
+        const error = new Error('Token is invalid:token not verified')
         error.statusCode=401;
         throw error;
     }

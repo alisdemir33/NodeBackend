@@ -70,7 +70,7 @@ exports.getContact= (req, res, next) => {
     .then((contact) => {
       if (!contact) {
         const error = new Error("Could not find contact.");
-        error.statusCode = 404;
+        error.statusCode = 405;
         throw error;
       }
       res.status(200).json({ message: "Contact fetched.", contact: contact });
